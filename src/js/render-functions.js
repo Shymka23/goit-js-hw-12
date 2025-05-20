@@ -1,31 +1,30 @@
-// Імпортуємо бібліотеку SimpleLightbox та її стилі
+// Імпортуємо бібліотеку SimpleLightbox для красивого перегляду зображень
 import SimpleLightbox from 'simplelightbox';
+// Підключаємо стилі для SimpleLightbox
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
-// Ініціалізуємо lightbox для всіх посилань всередині елементу з класом .gallery
-// captionsData: 'alt' — використовує текст з атрибута alt для підпису
-// captionDelay: 250 — затримка перед відображенням підпису (у мс)
+// Отримуємо посилання на основні елементи DOM
+const gallery = document.querySelector('.gallery'); // Список галереї
+const loader = document.querySelector('.loader'); // Елемент завантажувача (spinner)
+const loadMoreBtn = document.querySelector('.load-more-btn'); // Кнопка "Load More"
+
+// Ініціалізуємо lightbox для зображень у галереї
 let lightbox = new SimpleLightbox('.gallery a', {
-  captionsData: 'alt',
-  captionDelay: 250,
+  captionsData: 'alt', // Використовуємо атрибут alt як підпис
+  captionDelay: 250, // Затримка перед показом підпису (в мс)
 });
 
-// Функція створення галереї з масиву зображень
+/**
+ * Функція створює розмітку зображень і додає її до галереї.
+ * @param {Array} images - масив об'єктів зображень від Pixabay
+ */
 export function createGallery(images) {
-  // Знаходимо контейнер галереї
-  const gallery = document.querySelector('.gallery');
-
-  // Генеруємо HTML-розмітку для кожного зображення
   const markup = images
     .map(
       image => `
       <li class="gallery-item">
         <a href="${image.largeImageURL}">
-          <img
-            src="${image.webformatURL}"
-            alt="${image.tags}"
-            class="gallery-image"
-          />
+          <img src="${image.webformatURL}" alt="${image.tags}" class="gallery-image" />
           <div class="image-info">
             <p><b>Likes:</b>👍 ${image.likes}</p>
             <p><b>Views:</b>👀 ${image.views}</p>
@@ -36,29 +35,46 @@ export function createGallery(images) {
       </li>
     `
     )
-    .join('');
+    .join(''); // Об'єднуємо всі елементи в один HTML-рядок
 
-  // Додаємо згенеровану розмітку в кінець галереї
+  // Додаємо розмітку до кінця галереї
   gallery.insertAdjacentHTML('beforeend', markup);
 
-  // Оновлюємо lightbox, щоб нові елементи працювали
+  // Оновлюємо lightbox, щоб він знав про нові зображення
   lightbox.refresh();
 }
 
-// Функція очищення галереї
+/**
+ * Очищає галерею перед новим пошуком.
+ */
 export function clearGallery() {
-  const gallery = document.querySelector('.gallery');
-  gallery.innerHTML = ''; // Видаляємо весь вміст галереї
+  gallery.innerHTML = '';
 }
 
-// Функція показу завантажувача
+/**
+ * Показує анімацію завантаження (spinner).
+ */
 export function showLoader() {
-  const loader = document.querySelector('.loader');
-  loader.style.display = 'block'; // Робимо завантажувач видимим
+  loader.classList.add('visible');
 }
 
-// Функція приховування завантажувача
+/**
+ * Ховає анімацію завантаження.
+ */
 export function hideLoader() {
-  const loader = document.querySelector('.loader');
-  loader.style.display = 'none'; // Ховаємо завантажувач
+  loader.classList.remove('visible');
+}
+
+/**
+ * Показує кнопку "Load More".
+ */
+export function showLoadMoreButton() {
+  loadMoreBtn.classList.remove('hidden');
+}
+
+/**
+ * Ховає кнопку "Load More".
+ */
+export function hideLoadMoreButton() {
+  loadMoreBtn.classList.add('hidden');
 }

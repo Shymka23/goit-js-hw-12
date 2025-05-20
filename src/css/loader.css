@@ -15,7 +15,7 @@ body {
   padding: 20px;
   border-radius: 8px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.856);
 }
 
 .form {
@@ -31,13 +31,13 @@ body {
   width: 300px;
 }
 .form input:focus {
-  outline: 2px solid #ff6b08;
+  outline: 2px solid #08d6ff;
   outline-offset: 2px;
 }
 
 .form button {
   padding: 10px 20px;
-  background-color: #ff6b08;
+  background-color: #ff8308ee;
   color: white;
   border: none;
   border-radius: 4px;
@@ -46,7 +46,7 @@ body {
 }
 
 .form button:hover {
-  background-color: #ff8c00;
+  background-color: #ff5e00;
 }
 
 .form button:disabled {
@@ -66,7 +66,7 @@ body {
 .gallery-item {
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.559);
+  box-shadow: 0px 10px 5px rgba(0, 0, 0, 0.423);
   transition: transform 0.3s;
 }
 
@@ -89,18 +89,6 @@ body {
 .image-info p {
   margin: 5px 0;
   font-size: 14px;
-}
-
-.loader {
-  display: none;
-  width: 48px;
-  height: 48px;
-  border: 5px solid #4a76a8;
-  border-bottom-color: transparent;
-  border-radius: 50%;
-  margin: 20px auto;
-  animation: rotation 1s linear infinite;
-  will-change: transform;
 }
 
 @keyframes rotation {
@@ -127,4 +115,82 @@ body {
   text-align: center;
   padding: 20px;
   display: none;
+}
+
+.loader.visible {
+  display: block;
+}
+
+/* Loader: естетичний спінер */
+.loader {
+  display: none;
+  margin: 24px auto;
+  border: 5px solid #e0e0e0;
+  border-top: 5px solid #6366f1; /* індиго */
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  animation: spin 0.8s linear infinite;
+  transition: opacity 0.3s ease;
+}
+.loader.visible {
+  display: block;
+  opacity: 1;
+}
+
+/* Load More Button: сучасний стиль */
+.load-more-btn {
+  display: block;
+  margin: 24px auto;
+  padding: 12px 28px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #6366f1; /* індиго */
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.622);
+  transition: background-color 0.25s ease, transform 0.2s ease;
+}
+.load-more-btn:hover,
+.load-more-btn:focus {
+  background-color: #4f46e5;
+  transform: scale(1.05);
+}
+.load-more-btn:active {
+  transform: scale(0.96);
+}
+
+.load-more-btn.hidden {
+  display: none;
+}
+
+/* Loader анімація */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Темна тема підтримка (опціонально) */
+@media (prefers-color-scheme: dark) {
+  .loader {
+    border: 5px solid #333;
+    border-top: 5px solid #a5b4fc;
+  }
+
+  .load-more-btn {
+    background-color: #4f46e5;
+    color: #f0f0f0;
+    box-shadow: 0 6px 22px rgba(255, 255, 255, 0.016);
+  }
+
+  .load-more-btn:hover,
+  .load-more-btn:focus {
+    background-color: #4338ca;
+  }
 }

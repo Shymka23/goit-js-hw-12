@@ -1,27 +1,45 @@
-// Імпортуємо бібліотеку iziToast для відображення повідомлень
+// Імпортуємо бібліотеку сповіщень iziToast та її стилі
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
 
-// Імпортуємо функцію для отримання зображень з Pixabay API
-import { getImagesByQuery } from './js/pixabay-api';
+// Імпортуємо функцію для отримання зображень з Pixabay
+import { getImagesByQuery } from './js/pixabay-api.js';
 
-// Імпортуємо допоміжні функції для роботи з галереєю та завантажувачем
-import { createGallery, clearGallery, showLoader, hideLoader } from './js/render-functions';
+// Імпортуємо функції для рендеру галереї та елементів інтерфейсу
+import {
+  createGallery,
+  clearGallery,
+  showLoader,
+  hideLoader,
+  showLoadMoreButton,
+  hideLoadMoreButton,
+} from './js/render-functions.js';
 
-// Знаходимо форму пошуку на сторінці
+// Отримуємо посилання на елементи DOM
 const form = document.querySelector('.form');
+const loadMoreBtn = document.querySelector('.load-more-btn');
+const gallery = document.querySelector('.gallery');
 
-// Додаємо слухача події submit до форми
-form.addEventListener('submit', handleSubmit);
+// Змінні для зберігання поточного запиту, сторінки та загальної кількості результатів
+let currentQuery = '';
+let currentPage = 1;
+let totalHits = 0;
+
+// Кількість зображень на одну сторінку
+const PER_PAGE = 15;
+
+// Додаємо обробники подій на форму та кнопку "Load More"
+form.addEventListener('submit', onSearch);
+loadMoreBtn.addEventListener('click', onLoadMore);
 
 // Обробник події надсилання форми
-async function handleSubmit(event) {
-  event.preventDefault(); // Скасовуємо стандартну поведінку (перезавантаження сторінки)
+async function onSearch(event) {
+  event.preventDefault(); // Зупиняємо перезавантаження сторінки
 
-  // Отримуємо значення з поля пошуку, обрізаючи пробіли
+  // Отримуємо значення запиту та очищаємо пробіли
   const searchQuery = event.target.elements['search-text'].value.trim();
 
-  // Якщо поле пошуку порожнє — показуємо попередження і зупиняємо виконання
+  // Якщо поле порожнє — показуємо попередження
   if (!searchQuery) {
     iziToast.warning({
       title: 'Warning',
@@ -31,28 +49,46 @@ async function handleSubmit(event) {
     return;
   }
 
-  // Показуємо завантажувач та очищуємо попередню галерею
-  showLoader();
+  // Оновлюємо поточний запит і скидаємо сторінку
+  currentQuery = searchQuery;
+  currentPage = 1;
+
+  // Очищаємо галерею та приховуємо кнопку "Load More"
   clearGallery();
+  hideLoadMoreButton();
+
+  // Показуємо лоадер
+  showLoader();
 
   try {
-    // Отримуємо дані зображень за пошуковим запитом
-    const data = await getImagesByQuery(searchQuery);
+    // Отримуємо дані з API
+    const data = await getImagesByQuery(currentQuery, currentPage);
 
-    // Якщо результатів немає — повідомляємо користувача
+    // Якщо зображення не знайдено — показуємо помилку
     if (data.hits.length === 0) {
       iziToast.error({
         title: 'Error',
-        message: 'Sorry, there are no images matching your search query. Please try again!',
+        message:
+          'Sorry, there are no images matching your search query. Please try again!',
         position: 'topRight',
       });
       return;
     }
 
-    // Створюємо галерею з отриманих зображень
+    // Зберігаємо загальну кількість зображень
+    totalHits = data.totalHits;
+
+    // Рендеримо галерею з отриманих зображень
     createGallery(data.hits);
+
+    // Якщо є більше зображень — показуємо кнопку "Load More"
+    if (totalHits > PER_PAGE) {
+      showLoadMoreButton();
+    } else {
+      hideLoadMoreButton();
+    }
   } catch (error) {
-    // Обробка помилок запиту — повідомляємо користувача і виводимо помилку в консоль
+    // У випадку помилки — показуємо повідомлення
     iziToast.error({
       title: 'Error',
       message: 'Something went wrong. Please try again later.',
@@ -60,8 +96,57 @@ async function handleSubmit(event) {
     });
     console.error(error);
   } finally {
-    // Ховаємо завантажувач та скидаємо форму
+    // Ховаємо лоадер та скидаємо форму
     hideLoader();
     form.reset();
+  }
+}
+
+// Обробник натискання на кнопку "Load More"
+async function onLoadMore() {
+  currentPage += 1; // Переходимо до наступної сторінки
+  showLoader(); // Показуємо лоадер
+  hideLoadMoreButton(); // Приховуємо кнопку, поки не завантажаться дані
+
+  try {
+    // Отримуємо зображення наступної сторінки
+    const data = await getImagesByQuery(currentQuery, currentPage);
+
+    // Додаємо нові зображення до галереї
+    createGallery(data.hits);
+
+    // Обчислюємо загальну кількість сторінок
+    const totalPages = Math.ceil(totalHits / PER_PAGE);
+
+    // Якщо остання сторінка — ховаємо кнопку та показуємо повідомлення
+    if (currentPage >= totalPages) {
+      hideLoadMoreButton();
+      iziToast.info({
+        title: 'Info',
+        message: "We're sorry, but you've reached the end of search results.",
+        position: 'topRight',
+      });
+    } else {
+      showLoadMoreButton(); // Інакше показуємо кнопку знову
+    }
+
+    // Плавно прокручуємо сторінку вниз на висоту двох карток
+    const { height: cardHeight } =
+      gallery.firstElementChild.getBoundingClientRect();
+    window.scrollBy({
+      top: cardHeight * 2,
+      behavior: 'smooth',
+    });
+  } catch (error) {
+    // Помилка при запиті — показуємо повідомлення
+    iziToast.error({
+      title: 'Error',
+      message: 'Something went wrong. Please try again later.',
+      position: 'topRight',
+    });
+    console.error(error);
+  } finally {
+    // Ховаємо лоадер після завантаження
+    hideLoader();
   }
 }
